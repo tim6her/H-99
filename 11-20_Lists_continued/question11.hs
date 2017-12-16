@@ -1,18 +1,27 @@
 data Encoded a = Single a | Multiple Int a
   deriving Show
 
+pack :: (Eq a) =>  [a] -> [[a]]
+pack [] = []
+pack [x] = [[x]]
+pack all@(x:_) = xx : pack r
+    where
+        (xx, r) = pack' x all
+
+pack' :: (Eq a) => a -> [a] -> ([a], [a])
+pack' _ [] = ([], [])
+pack' x all@(y:ys)
+    | x == y = ((x:xx), r)
+    | otherwise = ([], all)
+    where
+        (xx, r) = pack' x ys
+
 encodeModified :: (Eq a) => [a] -> [Encoded a]
-encodeModified = singles . encodeModified'
+encodeModified p = foldr encodeElement [] (pack p)
 
-encodeModified' :: (Eq a) => [a] -> [Encoded a]
-encodeModified' [] = []
-encodeModified' [x] = [Multiple 1 x]
-encodeModified' (x:xs)
-  | x == y = (Multiple (n + 1) x): ys
-  | otherwise = (Multiple 1 x):all
-  where all@((Multiple n y):ys) = encodeModified' xs
+encodeElement :: [a] -> [Encoded a] -> [Encoded a]
+encodeElement [x] enc= (Single x):enc
+encodeElement all@(x:xs) enc = (Multiple (length all) x):enc
 
-singles :: [Encoded a] -> [Encoded a]
-singles [] = []
-singles ((Multiple 1 x):xs) = (Single x):(singles xs)
-singles (mx@(Multiple n x):xs) = mx:(singles xs)
+main :: IO ()
+main = print $ encodeModified "aaaabccaadeeee"
