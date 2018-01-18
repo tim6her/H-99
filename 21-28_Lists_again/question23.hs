@@ -7,11 +7,17 @@ rnd_select xs r = do
 
 rnd_select' :: (RandomGen g) => g -> [a] -> Int -> [a]
 rnd_select' _g [] _r = []
-rnd_select' g xs r = xx
+rnd_select' g all@(x:xs) r
+  | r > length all = []
+  | r == length all = all
+  | r <= 0 = []
+-- the probability of x being selected is 1 - (n - 1)^r / n^r
+  | otherwise = if d > (n - 1) ^ r
+                then x : rnd_select' g' all (r - 1)
+                else rnd_select' g' xs r
   where
-    n = length xs - 1
-    ii = take r (randomRs (0, n) g)
-    xx = [xs !! i | i <- ii]
+    n = length all
+    (d, g') = randomR (1, n ^ r) g
 
 
 main :: IO ()
